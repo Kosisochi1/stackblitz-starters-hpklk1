@@ -10,9 +10,6 @@ const dBasePath = path.join(__dirname, 'dBase', 'books.json');
 app.use(express.static('static'));
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-  res.status(200).send('Home').end();
-});
 app.get('/Home', (req, res) => {
   fs.readFile(dBasePath, 'utf-8', (err, data) => {
     if (err) {
@@ -29,6 +26,9 @@ app.get('/Home/:id', (req, res) => {
     }
     const single = JSON.parse(data);
     const singles = single.find((item) => item.id === parseInt(id));
+    if (!singles) {
+      res.status(404).send('No Data matched');
+    }
     res.status(200).send(singles);
   });
   // if (!single) {
@@ -36,9 +36,23 @@ app.get('/Home/:id', (req, res) => {
   // }
   // res.status(200).send(single);
 });
-app.get('/post', (req,res)=>{
-  
-})
+app.get('/post', (req, res) => {
+  const inventoryToString = req.body;
+  fs.readFile(dBasePath, 'utf-8', (err, data) => {
+    if (err) {
+      res.status(404).send('Not Found');
+    }
+    const inventoryReturn = JSON.parse(data);
+    const singleInventory = inventoryReturn.find((singleInven) => {
+      singleInven.id === inventoryToString.id;
+    });
+    if (!singleInventory) {
+      res.status(404).send('No data matched');
+    }
+    const upDatedInventory = { ...inventoryToString, ...singleInventory };
+    fs.writeFile(dBasePath, JSON.stringify(upDatedInventory), (err) => {});
+  });
+});
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
